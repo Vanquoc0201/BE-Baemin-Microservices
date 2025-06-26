@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Categories {
+  categoryId   Int       @id @default(autoincrement())
+  categoryName String?   @db.VarChar(100)
+  deletedBy    Int       @default(0)
+  isDeleted    Boolean   @default(false)
+  deletedAt    DateTime? @db.Timestamp(0)
+  createdAt    DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt    DateTime  @default(now()) @db.Timestamp(0)
+  Foods        Foods[]
+}
+
+model Deliveries {
+  deliveryId  Int               @id @default(autoincrement())
+  orderId     Int
+  address     String?           @db.VarChar(200)
+  status      Deliveries_status @default(pending)
+  shipperName String?           @db.VarChar(100)
+  shipTime    DateTime?         @db.Timestamp(0)
+  deletedBy   Int               @default(0)
+  isDeleted   Boolean           @default(false)
+  deletedAt   DateTime?         @db.Timestamp(0)
+  createdAt   DateTime          @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime          @default(now()) @db.Timestamp(0)
+  Orders      Orders            @relation(fields: [orderId], references: [orderId], onDelete: Cascade, map: "Deliveries_ibfk_1")
+
+  @@index([orderId], map: "orderId")
+}
+
+model Foods {
+  foodId          Int          @id @default(autoincrement())
+  foodName        String?      @db.VarChar(100)
+  foodPrice       Float?       @db.Float
+  foodDescription String?      @db.VarChar(255)
+  foodImage       String?      @db.VarChar(100)
+  foodStock       Int?
+  categoryId      Int?
+  deletedBy       Int          @default(0)
+  isDeleted       Boolean      @default(false)
+  deletedAt       DateTime?    @db.Timestamp(0)
+  createdAt       DateTime     @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime     @default(now()) @db.Timestamp(0)
+  Categories      Categories?  @relation(fields: [categoryId], references: [categoryId], onDelete: NoAction, onUpdate: NoAction, map: "Foods_ibfk_1")
+  OrderItems      OrderItems[]
+
+  @@index([categoryId], map: "categoryId")
+}
+
+model OrderItems {
+  orderItemId Int       @id @default(autoincrement())
+  orderId     Int
+  foodId      Int
+  quantity    Int?
+  unitPrice   Float?    @db.Float
+  deletedBy   Int       @default(0)
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime? @db.Timestamp(0)
+  createdAt   DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime  @default(now()) @db.Timestamp(0)
+  Orders      Orders    @relation(fields: [orderId], references: [orderId], onDelete: NoAction, onUpdate: NoAction, map: "OrderItems_ibfk_1")
+  Foods       Foods     @relation(fields: [foodId], references: [foodId], onDelete: NoAction, onUpdate: NoAction, map: "OrderItems_ibfk_2")
+
+  @@index([foodId], map: "foodId")
+  @@index([orderId], map: "orderId")
+}
+
+model Orders {
+  orderId    Int           @id @default(autoincrement())
+  userId     Int
+  totalPrice Float         @default(0) @db.Float
+  status     Orders_status @default(pending)
+  deletedBy  Int           @default(0)
+  isDeleted  Boolean       @default(false)
+  deletedAt  DateTime?     @db.Timestamp(0)
+  createdAt  DateTime      @default(now()) @db.Timestamp(0)
+  updatedAt  DateTime      @default(now()) @db.Timestamp(0)
+  Deliveries Deliveries[]
+  OrderItems OrderItems[]
+  Users      Users         @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "Orders_ibfk_1")
+
+  @@index([userId], map: "userId")
+}
+
+model Users {
+  userId    Int       @id @default(autoincrement())
+  name      String?   @db.VarChar(100)
+  email     String    @unique(map: "email") @db.VarChar(100)
+  password  String?   @db.VarChar(100)
+  address   String?   @db.VarChar(100)
+  phone     String?   @db.VarChar(100)
+  deletedBy Int       @default(0)
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime? @db.Timestamp(0)
+  createdAt DateTime  @default(now()) @db.Timestamp(0)
+  updatedAt DateTime  @default(now()) @db.Timestamp(0)
+  Orders    Orders[]
+}
+
+enum Deliveries_status {
+  pending
+  shipping
+  delivered
+  failed
+  cancelled
+}
+
+enum Orders_status {
+  pending
+  paid
+  shipping
+  delivered
+  cancelled
+}

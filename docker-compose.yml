@@ -1,0 +1,77 @@
+services:
+  # some-rabbit:
+  #   image: rabbitmq
+  #   ports: 
+  #   - 5672:5672
+  #   - 15672:15672
+  #   - 15692:15692
+  #   networks:
+  #     - nodeadv04-net
+
+  # nodeadv-mysql:
+  #   image: mysql
+  #   ports: 
+  #   - 3306:3306
+  #   networks:
+  #     - nodeadv04-net
+
+  api-gateway:
+    container_name: app 
+    build: ./api-gateway
+    # image: khai báo tên ứng dụng
+    ports: 
+      - 8081:8081
+
+    networks: 
+      - nodeadv04-net
+    
+
+  notify-service:
+    build: ./notify-service
+    networks:
+      - nodeadv04-net
+
+  product-service:
+    build: ./product-service
+    # environment:
+    #   - DATABASE_URL=mysql://root:1234@nodeadv_mysql:3306/db_amazon
+    #   - REDIS_HOST=some-redis
+    #   - REDIS_PORT=6379
+    #   - REDIS_PASSWORD=1234
+    #   - REDIS_TTL=10
+    networks:
+      - nodeadv04-net
+    # depends_on: -> thay thế cho network
+    #   - some-rabbit
+    #   - some-redis
+    #   - nodeadv-mysql
+
+  order-service:
+    build: ./order-service
+    env_file: ./order-service/.env
+    networks:
+      - nodeadv04-net
+
+  payment-service:
+    build: ./payment-service
+    env_file: ./payment-service/.env
+    networks:
+      - nodeadv04-net
+
+  shipping-service:
+    build: ./shipping-service
+    networks:
+      - nodeadv04-net
+  user-service:
+    build: ./user-service
+    env_file: ./user-service/.env
+    networks:
+      - nodeadv04-net
+
+networks: 
+  nodeadv04-net:
+    external: true # network đã tồn tại trước đó
+
+# docker-compose up -d == docker run x6
+#! env_file KHÔNG DÙNG CHUNG với environment
+#? env_file có thể không cần khai báo
